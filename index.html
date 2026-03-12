@@ -76,7 +76,7 @@
         </thead>
         <tbody id="tabela-corpo"></tbody>
     </table>
-    <div id="loading" style="text-align:center; padding:20px; color:#666;">Carregando dados...</div>
+    <div id="loading" style="text-align:center; padding:20px; color:#666; font-weight:bold;">A carregar base de dados...</div>
 </div>
 
 <div id="modalNovaTurma" class="modal-overlay">
@@ -92,9 +92,9 @@
             <option value="EAD (Semana)">EAD (Semana)</option>
             <option value="EAD (Sábado)">EAD (Sábado)</option>
         </select>
-        <label style="font-size:12px; font-weight:bold; color:#555;">Curso:</label>
+        <label style="font-size:12px; font-weight:bold; color:#555;">Curso (Grade):</label>
         <select id="selNovaTurmaCurso" class="input-modal" onchange="verificarEAD()">
-            <option value="">Carregando cursos...</option>
+            <option value="">Aguardando...</option>
         </select>
         
         <div id="divAulasEAD" style="display:none; background:#fff3e0; padding:15px; border-radius:5px; border:1px solid #ffe0b2; margin-bottom:15px;">
@@ -112,25 +112,34 @@
 <div id="modalImport" class="modal-overlay">
     <div class="modal-content">
         <span class="close-btn" onclick="fecharModal('modalImport')">&times;</span>
-        <h3>Importar Frequência</h3>
+        <h3 style="margin-bottom: 20px;">Importar Frequência</h3>
         
-        <div style="display:flex; gap:10px;">
-            <div style="flex:1;">
-                <label style="font-size:12px; font-weight:bold; color:#555;">1. Selecione a Turma</label>
-                <select id="selImportTurma" class="input-modal" onchange="atualizarDropdownMaterias()"></select>
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; border: 1px solid #ddd; margin-bottom: 15px;">
+            <div style="margin-bottom: 10px;">
+                <label style="font-size:12px; font-weight:bold; color:#555;">1º Selecione o Curso / Grade</label>
+                <select id="selImportCurso" class="input-modal" onchange="atualizarDropdownImportTurma()" style="margin-bottom:0;"></select>
             </div>
-            <div style="flex:1;">
-                <label style="font-size:12px; font-weight:bold; color:#555;">2. Selecione a Matéria</label>
-                <select id="selImportMateria" class="input-modal" disabled><option value=''>Aguardando turma...</option></select>
+            <div style="margin-bottom: 10px;">
+                <label style="font-size:12px; font-weight:bold; color:#555;">2º Selecione a Turma</label>
+                <select id="selImportTurma" class="input-modal" onchange="atualizarDropdownMaterias()" disabled style="margin-bottom:0;">
+                    <option value=''>Aguardando Curso...</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-size:12px; font-weight:bold; color:#555;">3º Selecione a Matéria</label>
+                <select id="selImportMateria" class="input-modal" disabled style="margin-bottom:0;">
+                    <option value=''>Aguardando Turma...</option>
+                </select>
             </div>
         </div>
 
-        <textarea id="txtImport" style="height:100px; font-family:monospace;" placeholder="Cole aqui os dados..." oninput="atualizarPrevia()" class="input-modal"></textarea>
+        <textarea id="txtImport" style="height:100px; font-family:monospace;" placeholder="Cole aqui a lista de alunos e faltas do seu sistema..." oninput="atualizarPrevia()" class="input-modal"></textarea>
         
         <div style="display:flex; gap:10px;">
             <div style="flex:1;"><label style="font-size:11px;">Coluna Nome (Nº)</label><input type="number" id="colNome" value="3" class="input-modal" oninput="atualizarPrevia()"></div>
             <div style="flex:1;"><label style="font-size:11px;">Coluna Faltas (Nº)</label><input type="number" id="colFaltas" value="5" class="input-modal" oninput="atualizarPrevia()"></div>
         </div>
+        
         <div class="previa-box">
             <div style="font-size:12px; font-weight:bold; color:#9c27b0; margin-bottom:5px;">👁️ Prévia (Ativos Detectados):</div>
             <table style="width:100%; font-size:11px; border-collapse: collapse;">
@@ -151,96 +160,118 @@ const BANCO_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tq
 
 let historicoGlobal = [], historicoSistema = [], estruturaEscola = {}, dadosConsolidados = [], dadosFiltrados = [], listaMateriasSimples = [], alunoAcaoPendente = "", dadosProntosParaSalvar = [];
 let matrizesGlobais = []; 
+let mapaTurmaCursoGlobal = {};
 
 window.onload = carregarTudo;
 
-function carregarTudo() {
-    fetch(`${HIST_URL}&t=${Date.now()}`).then(res => res.text()).then(data => {
-        const json = JSON.parse(data.substring(47).slice(0, -2));
-        let rawRows = json.table.rows.slice(1);
-        let hGeral = rawRows.map(r => ({ turma: r.c[0]?.v, aluno: r.c[1]?.v, data: r.c[3]?.f || r.c[3]?.v, acao: r.c[4]?.v })).filter(h => h.aluno);
+async function carregarTudo() {
+    document.getElementById("loading").style.display = "block";
+    
+    try {
+        // Carrega todas as planilhas simultaneamente para ser mais rápido
+        const [resHist, resConfig, resMatrizes] = await Promise.all([
+            fetch(`${HIST_URL}&t=${Date.now()}`).then(r => r.text()),
+            fetch(`${CONFIG_URL}&t=${Date.now()}`).then(r => r.text()),
+            fetch(`${MATRIZES_URL}&t=${Date.now()}`).then(r => r.text())
+        ]);
+
+        // 1. Processar Matrizes
+        const jsonMatrizes = JSON.parse(resMatrizes.substring(47).slice(0, -2));
+        matrizesGlobais = [];
+        let cursosEncontrados = new Set();
+        
+        if (jsonMatrizes.table.rows.length > 1) {
+            jsonMatrizes.table.rows.slice(1).forEach(r => { 
+                if(r.c[0]?.v) {
+                    cursosEncontrados.add(r.c[0].v); 
+                    matrizesGlobais.push({ curso: r.c[0].v, disciplina: r.c[1]?.v, codigo: r.c[2]?.v, ch: r.c[3]?.v });
+                }
+            });
+        }
+        
+        // Popula Cursos para a tela de Criar Turma
+        const selectCursoCriar = document.getElementById("selNovaTurmaCurso");
+        selectCursoCriar.innerHTML = "<option value=''>Escolha o Curso/Grade...</option>";
+        cursosEncontrados.forEach(c => selectCursoCriar.appendChild(new Option(c, c)));
+
+        // 2. Processar Histórico
+        const jsonHist = JSON.parse(resHist.substring(47).slice(0, -2));
+        let hGeral = jsonHist.table.rows.slice(1).map(r => ({ turma: r.c[0]?.v, aluno: r.c[1]?.v, data: r.c[3]?.f || r.c[3]?.v, acao: r.c[4]?.v })).filter(h => h.aluno);
         historicoGlobal = hGeral.filter(h => h.aluno !== "[SISTEMA]");
         historicoSistema = hGeral.filter(h => h.aluno === "[SISTEMA]");
-        carregarConfig();
-    });
-}
 
-function carregarConfig() {
-    fetch(`${CONFIG_URL}&t=${Date.now()}`).then(res => res.text()).then(data => {
-        const json = JSON.parse(data.substring(47).slice(0, -2));
-        const select = document.getElementById("selTurma"), sImportTurma = document.getElementById("selImportTurma");
-        select.innerHTML = "<option value=''>Selecione a turma...</option>";
-        sImportTurma.innerHTML = "<option value=''>1º Escolha a turma...</option>";
-        
-        estruturaEscola = {}; listaMateriasSimples = [];
-        let rawRows = json.table.rows.slice(1);
-        rawRows.forEach(r => {
+        // 3. Processar Config (Criação do Dicionário de Turmas e Cursos)
+        const jsonConfig = JSON.parse(resConfig.substring(47).slice(0, -2));
+        estruturaEscola = {}; 
+        listaMateriasSimples = [];
+        mapaTurmaCursoGlobal = {};
+
+        jsonConfig.table.rows.slice(1).forEach(r => {
             let t = r.c[0]?.v, d = r.c[1]?.v, a = r.c[2]?.v, c = r.c[3]?.v;
             if (t && a && c) {
                 if (!estruturaEscola[t]) estruturaEscola[t] = [];
                 estruturaEscola[t].push({ disciplina: d, aba: a, cargaTotal: c });
                 listaMateriasSimples.push({ nome: `${t} - ${d}`, aba: a, turma: t, disciplina: d }); 
+                
+                // Engenharia Reversa: Descobre o curso da turma através da disciplina
+                if (!mapaTurmaCursoGlobal[t]) {
+                    let match = matrizesGlobais.find(m => m.disciplina === d);
+                    mapaTurmaCursoGlobal[t] = match ? match.curso : "Outros Cursos";
+                }
             }
         });
-        
-        Object.keys(estruturaEscola).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})).forEach(t => {
-            let opt = document.createElement("option"); opt.value = t; opt.textContent = t; select.appendChild(opt);
-            let opt2 = document.createElement("option"); opt2.value = t; opt2.textContent = t; sImportTurma.appendChild(opt2);
-        });
 
-        select.addEventListener("change", () => processarTurma(select.value));
-        carregarMatrizes(); 
+        // Monta o select Principal da página
+        const selectTurmaPrincipal = document.getElementById("selTurma");
+        selectTurmaPrincipal.innerHTML = "<option value=''>Selecione a turma...</option>";
+        Object.keys(estruturaEscola).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})).forEach(t => {
+            selectTurmaPrincipal.appendChild(new Option(t, t));
+        });
+        selectTurmaPrincipal.addEventListener("change", () => processarTurma(selectTurmaPrincipal.value));
+
+        // Monta o PRIMEIRO select do Importador (Curso)
+        const selImportCurso = document.getElementById("selImportCurso");
+        selImportCurso.innerHTML = "<option value=''>Escolha o Curso/Grade...</option>";
+        let cursosAtivos = new Set(Object.values(mapaTurmaCursoGlobal));
+        Array.from(cursosAtivos).sort().forEach(c => selImportCurso.appendChild(new Option(c, c)));
+
         document.getElementById("loading").style.display = "none";
+
+    } catch(e) {
+        console.error(e);
+        document.getElementById("loading").innerText = "Erro ao carregar dados. Atualize a página.";
+    }
+}
+
+// LÓGICA DA CASCATA DE IMPORTAÇÃO
+function atualizarDropdownImportTurma() {
+    let curso = document.getElementById("selImportCurso").value;
+    let sImportTurma = document.getElementById("selImportTurma");
+    let sImportMateria = document.getElementById("selImportMateria");
+    
+    sImportTurma.innerHTML = "<option value=''>2º Escolha a Turma...</option>";
+    sImportMateria.innerHTML = "<option value=''>Aguardando Turma...</option>";
+    sImportMateria.disabled = true;
+
+    if(!curso) { sImportTurma.disabled = true; return; }
+    
+    sImportTurma.disabled = false;
+    let turmasDoCurso = Object.keys(mapaTurmaCursoGlobal).filter(t => mapaTurmaCursoGlobal[t] === curso);
+    turmasDoCurso.sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})).forEach(t => {
+        sImportTurma.appendChild(new Option(t, t));
     });
 }
 
-// NOVA FUNÇÃO: FILTRO EM CASCATA DA IMPORTAÇÃO
 function atualizarDropdownMaterias() {
-    let turmaSelecionada = document.getElementById("selImportTurma").value;
+    let turma = document.getElementById("selImportTurma").value;
     let sImportMateria = document.getElementById("selImportMateria");
-    sImportMateria.innerHTML = "<option value=''>Selecione a matéria...</option>";
-
-    if(!turmaSelecionada) {
-        sImportMateria.disabled = true;
-        return;
-    }
+    
+    sImportMateria.innerHTML = "<option value=''>3º Selecione a Matéria...</option>";
+    if(!turma) { sImportMateria.disabled = true; return; }
 
     sImportMateria.disabled = false;
-    let materias = estruturaEscola[turmaSelecionada] || [];
-    materias.forEach(m => {
-        let opt = document.createElement("option"); 
-        opt.value = m.aba; 
-        opt.textContent = m.disciplina; 
-        sImportMateria.appendChild(opt);
-    });
-}
-
-function carregarMatrizes() {
-    fetch(`${MATRIZES_URL}&t=${Date.now()}`).then(res => res.text()).then(data => {
-        try {
-            const json = JSON.parse(data.substring(47).slice(0, -2));
-            const selectCurso = document.getElementById("selNovaTurmaCurso");
-            selectCurso.innerHTML = "<option value=''>Escolha o Curso...</option>";
-            matrizesGlobais = [];
-            let cursosEncontrados = new Set();
-            
-            json.table.rows.slice(1).forEach(r => { 
-                if(r.c[0]?.v) {
-                    cursosEncontrados.add(r.c[0].v); 
-                    matrizesGlobais.push({
-                        curso: r.c[0].v,
-                        disciplina: r.c[1]?.v,
-                        codigo: r.c[2]?.v,
-                        ch: r.c[3]?.v
-                    });
-                }
-            });
-            
-            cursosEncontrados.forEach(c => {
-                let opt = document.createElement("option"); opt.value = c; opt.textContent = c; selectCurso.appendChild(opt);
-            });
-        } catch(e) { console.log("Aba Matrizes vazia."); }
-    });
+    let materias = estruturaEscola[turma] || [];
+    materias.forEach(m => sImportMateria.appendChild(new Option(m.disciplina, m.aba)));
 }
 
 function verificarEAD() {
@@ -261,16 +292,10 @@ function verificarEAD() {
         });
         listaHTML.innerHTML = html;
         divAulas.style.display = "block"; 
-    } else {
-        divAulas.style.display = "none"; 
-        listaHTML.innerHTML = "";
-    }
+    } else { divAulas.style.display = "none"; listaHTML.innerHTML = ""; }
 }
 
-function abrirCriarTurma() { 
-    document.getElementById("modalNovaTurma").style.display = "flex"; 
-    verificarEAD(); 
-}
+function abrirCriarTurma() { document.getElementById("modalNovaTurma").style.display = "flex"; verificarEAD(); }
 
 async function executarCriarTurma() {
     let num = document.getElementById("txtNovaTurmaNum").value.trim(); 
@@ -290,8 +315,7 @@ async function executarCriarTurma() {
     }
 
     let btn = document.getElementById("btnSalvarTurma");
-    btn.innerText = "⏳ Configurando Turma... Aguarde...";
-    btn.disabled = true;
+    btn.innerText = "⏳ Configurando Turma... Aguarde..."; btn.disabled = true;
 
     try {
         await fetch(SCRIPT_URL, {
@@ -381,50 +405,34 @@ function verHistorico(n) { document.getElementById("modalHist").style.display = 
 function abrirModalAcao(n) { alunoAcaoPendente = n; document.getElementById("acaoNomeAluno").innerText = n; document.getElementById("modalAcao").style.display = "flex"; }
 async function salvarAcaoPadronizada() { let t = document.getElementById("selTipoAcao").value, d = document.getElementById("txtDetalheAcao").value; if (!d.trim()) return alert("Preencha detalhes"); document.getElementById("modalAcao").style.display = "none"; try { await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ turma: document.getElementById("selTurma").value, aluno: alunoAcaoPendente, faltas: "-", data: new Date().toLocaleDateString('pt-BR'), acao: `[${t}] ${d}` }) }); alert("Salvo!"); carregarTudo(); } catch (e) { alert("Erro"); } }
 
-function abrirImportacao() { 
-    document.getElementById("modalImport").style.display = "flex"; 
-}
+function abrirImportacao() { document.getElementById("modalImport").style.display = "flex"; }
 
 function atualizarPrevia() {
     let txt = document.getElementById("txtImport").value.trim();
     let b = document.getElementById("tbodyPrevia");
-    dadosProntosParaSalvar = [];
-    b.innerHTML = "";
+    dadosProntosParaSalvar = []; b.innerHTML = "";
     
-    if (!txt) {
-        b.innerHTML = "<tr><td colspan='2' style='text-align:center; color:#888;'>Aguardando dados...</td></tr>";
-        return;
-    }
+    if (!txt) { b.innerHTML = "<tr><td colspan='2' style='text-align:center; color:#888;'>Aguardando dados...</td></tr>"; return; }
 
     let n = parseInt(document.getElementById("colNome").value) - 1 || 0;
     let f = parseInt(document.getElementById("colFaltas").value) - 1 || 1;
 
     txt.split(/\r?\n/).forEach(l => {
         if(!l.trim()) return;
-        
         let c = l.split("\t");
         if(c.length === 1 && l.includes(";")) c = l.split(";");
         if(c.length === 1 && l.includes(",")) c = l.split(",");
 
-        let nm = c[n];
-        let flRaw = c[f];
-        
+        let nm = c[n]; let flRaw = c[f];
         if (nm === undefined || flRaw === undefined) {
-            if (c.length >= 2) {
-                nm = c[0];
-                flRaw = c[c.length - 1];
-            }
+            if (c.length >= 2) { nm = c[0]; flRaw = c[c.length - 1]; }
         }
 
-        if (nm) nm = nm.trim();
-        if (flRaw) flRaw = flRaw.trim();
+        if (nm) nm = nm.trim(); if (flRaw) flRaw = flRaw.trim();
 
         if (nm && nm.length > 2 && flRaw !== "" && flRaw !== undefined) {
             if (nm.toLowerCase() === "aluno" || nm.toLowerCase() === "nome") return;
-
-            let faltas = flRaw.replace(/\D/g, "");
-            if (faltas === "") faltas = "0";
-
+            let faltas = flRaw.replace(/\D/g, ""); if (faltas === "") faltas = "0";
             dadosProntosParaSalvar.push([nm, faltas]);
             
             if (dadosProntosParaSalvar.length <= 5) {
@@ -442,18 +450,14 @@ function atualizarPrevia() {
 
 async function executarImportacao() { 
     let abaVirtualId = document.getElementById("selImportMateria").value; 
-    
     atualizarPrevia(); 
 
-    if(!abaVirtualId || !dadosProntosParaSalvar.length) {
-        return alert("Selecione a matéria e cole dados válidos."); 
-    }
+    if(!abaVirtualId || !dadosProntosParaSalvar.length) { return alert("Selecione a matéria e cole dados válidos."); }
     
     let inf = listaMateriasSimples.find(m => m.aba === abaVirtualId); 
     let btn = document.getElementById("btnSalvarImportacao");
     let txtOriginal = btn.innerText;
-    btn.innerText = "⏳ A guardar dados...";
-    btn.disabled = true;
+    btn.innerText = "⏳ A guardar dados..."; btn.disabled = true;
 
     try { 
         await Promise.all([ 
@@ -462,20 +466,22 @@ async function executarImportacao() {
         ]); 
         alert(`Sucesso! ${dadosProntosParaSalvar.length} alunos guardados no Banco de Dados.`); 
         
-        // --- NOVA FUNÇÃO: LIMPEZA TOTAL DO CACHE DA JANELA APÓS IMPORTAR ---
+        // Limpa o cache para a próxima importação
         document.getElementById("txtImport").value = "";
-        document.getElementById("selImportTurma").value = "";
-        document.getElementById("selImportMateria").innerHTML = "<option value=''>Aguardando turma...</option>";
+        document.getElementById("selImportCurso").value = "";
+        document.getElementById("selImportTurma").innerHTML = "<option value=''>Aguardando Curso...</option>";
+        document.getElementById("selImportTurma").disabled = true;
+        document.getElementById("selImportMateria").innerHTML = "<option value=''>Aguardando Turma...</option>";
         document.getElementById("selImportMateria").disabled = true;
         document.getElementById("tbodyPrevia").innerHTML = "<tr><td colspan='2' style='text-align:center; color:#888;'>Aguardando dados...</td></tr>";
         dadosProntosParaSalvar = [];
+        
         fecharModal('modalImport'); 
         carregarTudo(); 
     } catch(e) { 
         alert("Erro ao guardar."); 
     } finally {
-        btn.innerText = txtOriginal;
-        btn.disabled = false;
+        btn.innerText = txtOriginal; btn.disabled = false;
     }
 }
 
