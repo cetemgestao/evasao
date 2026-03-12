@@ -168,7 +168,6 @@ async function carregarTudo() {
     document.getElementById("loading").style.display = "block";
     
     try {
-        // Carrega todas as planilhas simultaneamente para ser mais rápido
         const [resHist, resConfig, resMatrizes] = await Promise.all([
             fetch(`${HIST_URL}&t=${Date.now()}`).then(r => r.text()),
             fetch(`${CONFIG_URL}&t=${Date.now()}`).then(r => r.text()),
@@ -183,8 +182,8 @@ async function carregarTudo() {
         if (jsonMatrizes.table.rows.length > 1) {
             jsonMatrizes.table.rows.slice(1).forEach(r => { 
                 if(r.c[0]?.v) {
-                    cursosEncontrados.add(r.c[0].v); 
-                    matrizesGlobais.push({ curso: r.c[0].v, disciplina: r.c[1]?.v, codigo: r.c[2]?.v, ch: r.c[3]?.v });
+                    cursosEncontrados.add(r.c[0].v.trim()); 
+                    matrizesGlobais.push({ curso: r.c[0].v.trim(), disciplina: r.c[1]?.v, codigo: r.c[2]?.v, ch: r.c[3]?.v });
                 }
             });
         }
@@ -200,7 +199,7 @@ async function carregarTudo() {
         historicoGlobal = hGeral.filter(h => h.aluno !== "[SISTEMA]");
         historicoSistema = hGeral.filter(h => h.aluno === "[SISTEMA]");
 
-        // 3. Processar Config (Criação do Dicionário de Turmas e Cursos)
+        // 3. Processar Config (COM A CORREÇÃO DO CÓDIGO DA MATÉRIA!)
         const jsonConfig = JSON.parse(resConfig.substring(47).slice(0, -2));
         estruturaEscola = {}; 
         listaMateriasSimples = [];
@@ -208,15 +207,25 @@ async function carregarTudo() {
 
         jsonConfig.table.rows.slice(1).forEach(r => {
             let t = r.c[0]?.v, d = r.c[1]?.v, a = r.c[2]?.v, c = r.c[3]?.v;
-            if (t && a && c) {
+            let cursoSalvo = r.c[4]?.v; // Se a sua nova versão do Apps Script já estiver gravando o curso aqui
+
+            if (t && a) {
                 if (!estruturaEscola[t]) estruturaEscola[t] = [];
-                estruturaEscola[t].push({ disciplina: d, aba: a, cargaTotal: c });
+                estruturaEscola[t].push({ disciplina: d, aba: a, cargaTotal: c || 0 });
                 listaMateriasSimples.push({ nome: `${t} - ${d}`, aba: a, turma: t, disciplina: d }); 
                 
-                // Engenharia Reversa: Descobre o curso da turma através da disciplina
+                // Engenharia Reversa BLINDADA
                 if (!mapaTurmaCursoGlobal[t]) {
-                    let match = matrizesGlobais.find(m => m.disciplina === d);
-                    mapaTurmaCursoGlobal[t] = match ? match.curso : "Outros Cursos";
+                    if (cursoSalvo) {
+                        mapaTurmaCursoGlobal[t] = cursoSalvo.trim();
+                    } else {
+                        // A grande mudança está aqui: Ele procura primeiro pelo código exato (ex: FTM.200.000)
+                        let match = matrizesGlobais.find(m => m.codigo && a.includes(m.codigo));
+                        // Se não achar, o plano B é usar o nome
+                        if (!match) match = matrizesGlobais.find(m => m.disciplina === d);
+                        
+                        mapaTurmaCursoGlobal[t] = match ? match.curso : "Outros Cursos";
+                    }
                 }
             }
         });
@@ -229,11 +238,17 @@ async function carregarTudo() {
         });
         selectTurmaPrincipal.addEventListener("change", () => processarTurma(selectTurmaPrincipal.value));
 
-        // Monta o PRIMEIRO select do Importador (Curso)
+        // Monta o PRIMEIRO select do Importador (Mostra apenas cursos que JÁ TÊM turmas ativas)
         const selImportCurso = document.getElementById("selImportCurso");
         selImportCurso.innerHTML = "<option value=''>Escolha o Curso/Grade...</option>";
         let cursosAtivos = new Set(Object.values(mapaTurmaCursoGlobal));
-        Array.from(cursosAtivos).sort().forEach(c => selImportCurso.appendChild(new Option(c, c)));
+        
+        Array.from(cursosAtivos).sort().forEach(c => {
+            if(c && c !== "Outros Cursos") selImportCurso.appendChild(new Option(c, c));
+        });
+        
+        // Proteção para turmas antigas não sumirem
+        if(cursosAtivos.has("Outros Cursos")) selImportCurso.appendChild(new Option("Turmas Antigas", "Outros Cursos"));
 
         document.getElementById("loading").style.display = "none";
 
