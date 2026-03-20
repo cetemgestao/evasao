@@ -6,7 +6,22 @@
     <title>Monitoramento de Evasão</title>
     <style>
         /* --- ESTILOS VISUAIS PADRÃO ORIGINAIS INTACTOS --- */
-        bod
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f2f5; padding: 20px; color: #333; margin: 0; }
+        .container { max-width: 1350px; margin: auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+        h2 { margin: 0; color: #2c3e50; }
+        select { padding: 10px; font-size: 14px; border-radius: 5px; min-width: 200px; border: 1px solid #ccc; }
+        .cards { display: flex; gap: 8px; margin-bottom: 25px; }
+        .card { flex: 1; padding: 12px 5px; text-align: center; border-radius: 8px; background: #fff; border: 1px solid #ddd; border-top: 4px solid #ccc; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: 0.2s; }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .card h3 { margin: 0; font-size: 24px; }
+        .card p { margin: 5px 0 0; font-size: 10px; text-transform: uppercase; color: #666; font-weight: bold; }
+        .ok { border-top-color: #2e7d32; color: #2e7d32; }
+        .alerta { border-top-color: #fbc02d; color: #fbc02d; }
+        .atencao { border-top-color: #f9a825; color: #f9a825; } 
+        .risco { border-top-color: #e67e22; color: #e67e22; }    
+        .critico { border-top-color: #c62828; color: #c62828; }  
+        
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; min-width: 700px; } 
         
@@ -99,8 +114,7 @@
                     <th>Situação Geral</th>
                     <th>
                         Disciplina Atual (Faltas | %)
-                        <br>
-                        <label style="display: inline-flex; align-items: center; gap: 5px; font-size: 11px; margin-top: 6px; cursor: pointer; color: #444; font-weight: bold; background: #e0e0e0; padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc;">
+                        <label style="display: flex; align-items: center; gap: 5px; font-size: 11px; margin-top: 5px; cursor: pointer; color: #2196f3; font-weight: bold;">
                             <input type="checkbox" id="chkMostrarTodasUCs" onchange="mostrar()"> Mostrar todas as UC's
                         </label>
                     </th>
@@ -218,7 +232,6 @@
 </div>
 
 <script>
-// USANDO AS URLS ORIGINAIS QUE FUNCIONAM PERFEITAMENTE
 const SHEET_ID = "1MjfQ5NQ3BvQAWzmIxjoqDBmeQdAn9EREGjqnj2EAR1I"; 
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzjCh63MR6wbYoaff3qm3uAgPxbgF6_XtJqBImkvJZZVT8dbA5pLi7IV7sLfddaRf81KA/exec"; 
 const CONFIG_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=0&sheet=Config`;
@@ -229,6 +242,11 @@ const BANCO_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tq
 let historicoGlobal = [], historicoSistema = [], estruturaEscola = {}, dadosConsolidados = [], dadosFiltrados = [], listaMateriasSimples = [], alunoAcaoPendente = "", dadosProntosParaSalvar = [];
 let matrizesGlobais = []; 
 let mapaTurmaCursoGlobal = {};
+
+function escapeHTML(str) {
+    if (!str) return "";
+    return String(str).replace(/[&<>'"]/g, match => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[match]));
+}
 
 function ordenarCursosTurmas(a, b) {
     let isPresA = a.toUpperCase().includes("PRESENCIAL") ? 0 : 1;
@@ -415,29 +433,39 @@ async function processarTurma(turma) {
     document.getElementById("loading").style.display = "block";
     verificarDataImportacao(turma);
     let mapaAlunos = {}, materias = estruturaEscola[turma];
+    
+    let mapaMaterias = {};
+    if (materias) materias.forEach(m => mapaMaterias[m.disciplina] = m);
+    
     try {
-        const res = await fetch(`${BANCO_URL}&t=${Date.now()}`);
+        const querySegura = encodeURIComponent(`select * where A = '${turma}'`);
+        const res = await fetch(`${BANCO_URL}&tq=${querySegura}&t=${Date.now()}`);
+        
         const txt = await res.text();
         const json = JSON.parse(txt.substring(47).slice(0,-2));
+        
         let rawRows = [];
-        if(json.table.rows.length > 1) { rawRows = json.table.rows.slice(1); } 
-        let dadosDestaTurma = rawRows.filter(r => r.c[0]?.v === turma);
+        if(json.table.rows.length > 0) { rawRows = json.table.rows; } 
 
-        dadosDestaTurma.forEach(linha => {
+        rawRows.forEach(linha => {
             let discBD = linha.c[1]?.v, nome = linha.c[2]?.v, faltas = linha.c[3]?.v || 0;
             if (nome) {
-                let matInfo = materias.find(m => m.disciplina === discBD);
+                let matInfo = mapaMaterias[discBD]; 
                 if (!matInfo) return; 
                 let carga = matInfo.cargaTotal;
+                
+                // Se o aluno não existir, cria o perfil dele com a lista vazia de UC's
                 if (!mapaAlunos[nome]) mapaAlunos[nome] = { nome, status: "OK", prioridade: 0, detalhes: [] };
                 
                 let perc = 0;
-                if (carga > 0) { perc = (faltas / carga) * 100; }
+                if(carga > 0) {
+                    perc = (faltas / carga) * 100;
+                }
                 
                 let sMat = "OK";
                 if (perc > 65) sMat = "Desistente"; else if (perc > 50) sMat = "Risco Alto"; else if (perc > 25) sMat = "Atenção"; else if (perc >= 15) sMat = "Alerta";
                 
-                // Lógica de armazenar UCs para a caixinha de verificação
+                // Em vez de apagar as antigas, ele guarda no histórico do aluno
                 let existingIndex = mapaAlunos[nome].detalhes.findIndex(d => d.disciplina === discBD);
                 if (existingIndex > -1) {
                     mapaAlunos[nome].detalhes[existingIndex] = { disciplina: discBD, perc: perc.toFixed(0) + "%", faltas, status: sMat };
@@ -445,6 +473,7 @@ async function processarTurma(turma) {
                     mapaAlunos[nome].detalhes.push({ disciplina: discBD, perc: perc.toFixed(0) + "%", faltas, status: sMat });
                 }
                 
+                // A situação geral do aluno é sempre ditada pela última UC que foi lida na planilha
                 mapaAlunos[nome].status = sMat;
                 let pesos = {"OK": 0, "Alerta": 1, "Atenção": 2, "Risco Alto": 3, "Desistente": 4};
                 mapaAlunos[nome].prioridade = pesos[sMat];
@@ -462,9 +491,8 @@ function mostrar() {
     const tbody = document.getElementById("tabela-corpo");
     tbody.innerHTML = "";
     
-    // Verifica se a caixinha está marcada
-    let chk = document.getElementById("chkMostrarTodasUCs");
-    let mostrarTodas = chk ? chk.checked : false;
+    // VERIFICA SE A CAIXINHA ESTÁ MARCADA PARA MOSTRAR TUDO OU SÓ A ATUAL
+    let mostrarTodas = document.getElementById("chkMostrarTodasUCs").checked;
 
     let cont = { "OK": 0, "Alerta": 0, "Atenção": 0, "Risco Alto": 0, "Desistente": 0 };
     dadosConsolidados.forEach(a => cont[a.status]++);
@@ -479,21 +507,27 @@ function mostrar() {
     dadosFiltrados.forEach((aluno, index) => {
         let tagsHtml = "—";
         
+        // Se o aluno tiver UCs lançadas
         if (aluno.detalhes.length > 0) {
+            // Se "Mostrar Todas" estiver marcado, puxa todas. Se não, pega apenas a última da lista (a atual)
             let listaParaMostrar = mostrarTodas ? aluno.detalhes : [aluno.detalhes[aluno.detalhes.length - 1]];
             
+            // Monta as tags coloridas de acordo com as regras de CSS que fizemos
             tagsHtml = listaParaMostrar.map(d => {
                 let corBg = "bg-ok";
                 if (d.status === "Alerta") corBg = "bg-alerta"; 
                 else if (d.status === "Atenção") corBg = "bg-atencao"; 
                 else if (d.status === "Risco Alto") corBg = "bg-risco"; 
                 else if (d.status === "Desistente") corBg = "bg-critico";
-                return `<span class="tag-materia ${corBg}">${d.disciplina}: ${d.faltas} (${d.perc})</span>`;
+                return `<span class="tag-materia ${corBg}">${escapeHTML(d.disciplina)}: ${d.faltas} (${d.perc})</span>`;
             }).join(" ");
         }
         
+        let safeNome = escapeHTML(aluno.nome);
+        let safeAcao = obterUltimaAcao(aluno.nome);
+        
         let tr = document.createElement("tr");
-        tr.innerHTML = `<td style="color:#888;">${index + 1}</td><td><b>${aluno.nome}</b></td><td><span class="badge" style="background:${cores[aluno.status]}">${aluno.status}</span></td><td>${tagsHtml}</td><td>${obterUltimaAcao(aluno.nome)}</td><td><button class="btn-hist" onclick="verHistorico('${aluno.nome}')">📜 Ver</button><button class="btn-acao" onclick="abrirModalAcao('${aluno.nome}')">➕ Ação</button></td>`;
+        tr.innerHTML = `<td style="color:#888;">${index + 1}</td><td><b>${safeNome}</b></td><td><span class="badge" style="background:${cores[aluno.status]}">${aluno.status}</span></td><td>${tagsHtml}</td><td>${safeAcao}</td><td><button class="btn-hist" onclick="verHistorico('${safeNome}')">📜 Ver</button><button class="btn-acao" onclick="abrirModalAcao('${safeNome}')">➕ Ação</button></td>`;
         tbody.appendChild(tr);
     });
 }
@@ -517,7 +551,10 @@ async function gerarRelatorioGlobal() {
             if(turmaBD && nome && nome !== "[SISTEMA]") {
                 let matInfo = estruturaEscola[turmaBD]?.find(m => m.disciplina === discBD);
                 if(matInfo) {
-                    let perc = (faltas / matInfo.cargaTotal) * 100, sMat = "OK";
+                    let perc = 0;
+                    if(matInfo.cargaTotal > 0) perc = (faltas / matInfo.cargaTotal) * 100;
+                    
+                    let sMat = "OK";
                     if (perc > 65) sMat = "Desistente"; else if (perc > 50) sMat = "Risco Alto"; else if (perc > 25) sMat = "Atenção"; else if (perc >= 15) sMat = "Alerta";
                     mapaGlobal[`${turmaBD}|${nome}`] = sMat; 
                 }
@@ -559,8 +596,8 @@ function verificarDataImportacao(t) {
     div.innerHTML = (diff > 7 ? "⚠️ Dados velhos" : "✅ Dados OK") + ` (${dStr})`;
     div.style.color = diff > 7 ? "#c62828" : "#2e7d32";
 }
-function obterUltimaAcao(n) { let a = historicoGlobal.filter(h => h.aluno === n); return a.length === 0 ? "<span style='color:#ccc; font-size:11px'>Sem registro</span>" : `<b>${a[a.length-1].data}</b>`; }
-function verHistorico(n) { document.getElementById("modalHist").style.display = "flex"; document.getElementById("modalTitulo").innerText = "Histórico: " + n; let r = historicoGlobal.filter(h => h.aluno === n).reverse(), l = document.getElementById("modalLista"); l.innerHTML = r.length ? r.map(a => `<div class="hist-item"><span class="hist-data">📅 ${a.data}</span><div class="hist-texto">${a.acao}</div></div>`).join("") : "<p>Vazio</p>"; }
+function obterUltimaAcao(n) { let a = historicoGlobal.filter(h => h.aluno === n); return a.length === 0 ? "<span style='color:#ccc; font-size:11px'>Sem registro</span>" : `<b>${escapeHTML(a[a.length-1].data)}</b>`; }
+function verHistorico(n) { document.getElementById("modalHist").style.display = "flex"; document.getElementById("modalTitulo").innerText = "Histórico: " + n; let r = historicoGlobal.filter(h => h.aluno === n).reverse(), l = document.getElementById("modalLista"); l.innerHTML = r.length ? r.map(a => `<div class="hist-item"><span class="hist-data">📅 ${escapeHTML(a.data)}</span><div class="hist-texto">${escapeHTML(a.acao)}</div></div>`).join("") : "<p>Vazio</p>"; }
 function abrirModalAcao(n) { alunoAcaoPendente = n; document.getElementById("acaoNomeAluno").innerText = n; document.getElementById("modalAcao").style.display = "flex"; }
 async function salvarAcaoPadronizada() { let t = document.getElementById("selTipoAcao").value, d = document.getElementById("txtDetalheAcao").value; if (!d.trim()) return alert("Preencha detalhes"); document.getElementById("modalAcao").style.display = "none"; try { await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ turma: document.getElementById("selTurma").value, aluno: alunoAcaoPendente, faltas: "-", data: new Date().toLocaleDateString('pt-BR'), acao: `[${t}] ${d}` }) }); alert("Salvo!"); carregarTudo(); } catch (e) { alert("Erro"); } }
 
@@ -595,7 +632,7 @@ function atualizarPrevia() {
             dadosProntosParaSalvar.push([nm, faltas]);
             
             if (dadosProntosParaSalvar.length <= 5) {
-                b.innerHTML += `<tr><td style="border:1px solid #ddd; padding:4px;">${nm}</td><td style="border:1px solid #ddd; padding:4px; text-align:center;">${faltas}</td></tr>`;
+                b.innerHTML += `<tr><td style="border:1px solid #ddd; padding:4px;">${escapeHTML(nm)}</td><td style="border:1px solid #ddd; padding:4px; text-align:center;">${escapeHTML(faltas)}</td></tr>`;
             }
         }
     });
@@ -644,7 +681,16 @@ async function executarImportacao() {
 }
 
 function fecharModal(id) { document.getElementById(id).style.display = "none"; }
-document.getElementById("busca").addEventListener("input", function() { let t = this.value.toLowerCase(); dadosFiltrados = dadosConsolidados.filter(a => a.nome.toLowerCase().includes(t)); mostrar(); });
+
+let debounceTimer;
+document.getElementById("busca").addEventListener("input", function() { 
+    clearTimeout(debounceTimer);
+    let t = this.value.toLowerCase(); 
+    debounceTimer = setTimeout(() => {
+        dadosFiltrados = dadosConsolidados.filter(a => a.nome.toLowerCase().includes(t)); 
+        mostrar(); 
+    }, 300);
+});
 </script>
 </body>
 </html>
