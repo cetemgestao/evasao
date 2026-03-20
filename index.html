@@ -29,7 +29,7 @@
         td { padding: 10px; border-bottom: 1px solid #eee; vertical-align: middle; font-size: 14px; }
         .badge { padding: 4px 8px; border-radius: 12px; color: white; font-weight: bold; font-size: 10px; text-transform: uppercase; }
         
-        /* Regra rigorosa: letra sempre preta e em negrito */
+        /* Regra rigorosa: letra sempre preta e em negrito nas matérias */
         .tag-materia { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; margin: 2px; color: #000 !important; font-weight: bold; border: 1px solid rgba(0,0,0,0.2); }
         .bg-ok { background-color: #a5d6a7; }
         .bg-alerta { background-color: #fff59d; }
@@ -130,115 +130,16 @@
     <div id="loading" style="text-align:center; padding:20px; color:#666; font-weight:bold;">A carregar base de dados...</div>
 </div>
 
-<div id="modalRelatorioGlobal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 450px; text-align:center;">
-        <span class="close-btn" onclick="fecharModal('modalRelatorioGlobal')">&times;</span>
-        <h3>📊 Relatório Global de Evasão</h3>
-        <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Resumo geral de todas as disciplinas atuais dos alunos ativos.</p>
-        <div id="conteudoRelatorioGlobal" style="text-align: left; background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #ddd;">
-            Aguarde, calculando...
-        </div>
-        <button onclick="fecharModal('modalRelatorioGlobal')" style="background:#673ab7; width:100%; padding:12px; margin-top:20px; font-size:16px; color: white; border: none; border-radius: 5px; cursor: pointer;">Fechar Relatório</button>
-    </div>
-</div>
-
-<div id="modalExcluir" class="modal-overlay">
-    <div class="modal-content" style="max-width: 450px; text-align:center;">
-        <span class="close-btn" onclick="fecharModal('modalExcluir')">&times;</span>
-        <h3 style="color: #c62828;">🗑️ Excluir Turma Concluída</h3>
-        <p style="text-align: left; font-size: 14px; color: #444; line-height: 1.6;">
-            Para manter a integridade do seu banco de dados e do histórico, a exclusão de uma turma não é feita por botão. 
-            <br><br>
-            <b>Como limpar a turma do painel:</b><br>
-            1. Abra a sua planilha do Google Sheets.<br>
-            2. Vá na aba inferior chamada <b>Config</b>.<br>
-            3. Selecione a linha referente à turma que você quer apagar e clique em "Excluir linha".<br>
-            4. Volte aqui e clique no botão <b>🔄 Atualizar (F5)</b>.
-            <br><br>
-            <i>A turma sumirá do menu, mas o histórico de ações permanecerá salvo.</i>
-        </p>
-        <button onclick="fecharModal('modalExcluir')" style="background:#e53935; width:100%; padding:12px; margin-top:10px; font-size:16px; color: white; border: none; border-radius: 5px; cursor: pointer;">Entendi</button>
-    </div>
-</div>
-
-<div id="modalNovaTurma" class="modal-overlay">
-    <div class="modal-content" style="max-width: 400px;">
-        <span class="close-btn" onclick="fecharModal('modalNovaTurma')">&times;</span>
-        <h3>🆕 Gerar Nova Turma</h3>
-        <label style="font-size:12px; font-weight:bold; color:#555;">Nome ou Número da Turma:</label>
-        <input type="text" id="txtNovaTurmaNum" placeholder="Ex: 11 ou 11A" class="input-modal">
-        <label style="font-size:12px; font-weight:bold; color:#555;">Modalidade:</label>
-        <select id="selNovaTurmaMod" class="input-modal" onchange="verificarEAD()">
-            <option value="" selected disabled>Escolha a Modalidade...</option>
-            <option value="PRESENCIAL">Presencial</option>
-            <option value="EAD (Semana)">EAD (Semana)</option>
-            <option value="EAD (Sábado)">EAD (Sábado)</option>
-        </select>
-        <label style="font-size:12px; font-weight:bold; color:#555;">Curso (Grade):</label>
-        <select id="selNovaTurmaCurso" class="input-modal" onchange="verificarEAD()">
-            <option value="">Aguardando...</option>
-        </select>
-        
-        <div id="divAulasEAD" style="display:none; background:#fff3e0; padding:15px; border-radius:5px; border:1px solid #ffe0b2; margin-bottom:15px;">
-            <p style="margin:0 0 10px 0; font-size:12px; font-weight:bold; color:#e65100;">⚠️ Turma EAD: Defina a quantidade de aulas:</p>
-            <div id="listaDisciplinasEAD"></div>
-        </div>
-        
-        <button id="btnSalvarTurma" onclick="executarCriarTurma()" style="background:#4CAF50; width:100%; padding:12px; margin-top:5px; font-size:16px; color: white; border: none; border-radius: 5px; cursor: pointer;">⚙️ Construir Turma na Planilha</button>
-    </div>
-</div>
-
+<div id="modalRelatorioGlobal" class="modal-overlay"><div class="modal-content" style="max-width: 450px; text-align:center;"><span class="close-btn" onclick="fecharModal('modalRelatorioGlobal')">&times;</span><h3>📊 Relatório Global de Evasão</h3><p style="font-size: 13px; color: #666; margin-bottom: 20px;">Resumo geral de todas as disciplinas atuais dos alunos ativos.</p><div id="conteudoRelatorioGlobal" style="text-align: left; background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #ddd;">Aguarde, calculando...</div><button onclick="fecharModal('modalRelatorioGlobal')" style="background:#673ab7; width:100%; padding:12px; margin-top:20px; font-size:16px; color: white; border: none; border-radius: 5px; cursor: pointer;">Fechar Relatório</button></div></div>
+<div id="modalExcluir" class="modal-overlay"><div class="modal-content" style="max-width: 450px; text-align:center;"><span class="close-btn" onclick="fecharModal('modalExcluir')">&times;</span><h3 style="color: #c62828;">🗑️ Excluir Turma Concluída</h3><p style="text-align: left; font-size: 14px; color: #444; line-height: 1.6;">Para manter a integridade do seu banco de dados e do histórico, a exclusão de uma turma não é feita por botão. <br><br><b>Como limpar a turma do painel:</b><br>1. Abra a sua planilha.<br>2. Vá na aba inferior chamada <b>Config</b>.<br>3. Selecione a linha da turma e clique em "Excluir linha".<br>4. Volte aqui e atualize (F5).<br><br><i>O histórico de ações permanecerá salvo.</i></p><button onclick="fecharModal('modalExcluir')" style="background:#e53935; width:100%; padding:12px; margin-top:10px; font-size:16px; color: white; border: none; border-radius: 5px; cursor: pointer;">Entendi</button></div></div>
+<div id="modalNovaTurma" class="modal-overlay"><div class="modal-content" style="max-width: 400px;"><span class="close-btn" onclick="fecharModal('modalNovaTurma')">&times;</span><h3>🆕 Gerar Nova Turma</h3><label style="font-size:12px; font-weight:bold; color:#555;">Nome ou Número da Turma:</label><input type="text" id="txtNovaTurmaNum" placeholder="Ex: 11 ou 11A" class="input-modal"><label style="font-size:12px; font-weight:bold; color:#555;">Modalidade:</label><select id="selNovaTurmaMod" class="input-modal" onchange="verificarEAD()"><option value="" selected disabled>Escolha a Modalidade...</option><option value="PRESENCIAL">Presencial</option><option value="EAD (Semana)">EAD (Semana)</option><option value="EAD (Sábado)">EAD (Sábado)</option></select><label style="font-size:12px; font-weight:bold; color:#555;">Curso (Grade):</label><select id="selNovaTurmaCurso" class="input-modal" onchange="verificarEAD()"><option value="">Aguardando...</option></select><div id="divAulasEAD" style="display:none; background:#fff3e0; padding:15px; border-radius:5px; border:1px solid #ffe0b2; margin-bottom:15px;"><p style="margin:0 0 10px 0; font-size:12px; font-weight:bold; color:#e65100;">⚠️ Turma EAD: Defina a quantidade de aulas:</p><div id="listaDisciplinasEAD"></div></div><button id="btnSalvarTurma" onclick="executarCriarTurma()" style="background:#4CAF50; width:100%; padding:12px; margin-top:5px; font-size:16px; color: white; border: none; border-radius: 5px; cursor: pointer;">⚙️ Construir Turma na Planilha</button></div></div>
 <div id="modalHist" class="modal-overlay"><div class="modal-content"><span class="close-btn" onclick="fecharModal('modalHist')">&times;</span><h3 id="modalTitulo">Histórico</h3><div id="modalLista" style="max-height: 400px; overflow-y: auto; margin-top: 15px;">Carregando...</div></div></div>
 <div id="modalAcao" class="modal-overlay"><div class="modal-content" style="max-width: 450px;"><span class="close-btn" onclick="fecharModal('modalAcao')">&times;</span><h3>Registrar Ação</h3><p id="acaoNomeAluno" style="font-weight:bold; color: #2196F3; font-size: 16px; margin-bottom: 15px;"></p><select id="selTipoAcao" class="input-modal"><option value="📞 Ligação Telefônica">📞 Ligação Telefônica</option><option value="📱 Mensagem WhatsApp">📱 Mensagem WhatsApp</option><option value="🤝 Reunião Presencial">🤝 Reunião Presencial</option><option value="🏠 Visita Domiciliar">🏠 Visita Domiciliar</option><option value="⚠️ Conselho Tutelar">⚠️ Encaminhado ao Conselho Tutelar</option><option value="📝 Outro">📝 Outro</option></select><textarea id="txtDetalheAcao" placeholder="Escreva o retorno da conversa..." style="height:80px;" class="input-modal"></textarea><button onclick="salvarAcaoPadronizada()" style="background:#2196F3; width:100%; padding:12px; margin-top:15px; color: white; border-radius: 5px; border: none;">💾 Salvar</button></div></div>
-
-<div id="modalImport" class="modal-overlay">
-    <div class="modal-content">
-        <span class="close-btn" onclick="fecharModal('modalImport')">&times;</span>
-        <h3 style="margin-bottom: 20px;">Lançar Frequência</h3>
-        
-        <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; border: 1px solid #ddd; margin-bottom: 15px;">
-            <div style="margin-bottom: 10px;">
-                <label style="font-size:12px; font-weight:bold; color:#555;">1º Selecione o Curso / Grade</label>
-                <select id="selImportCurso" class="input-modal" onchange="atualizarDropdownImportTurma()" style="margin-bottom:0;"></select>
-            </div>
-            <div style="margin-bottom: 10px;">
-                <label style="font-size:12px; font-weight:bold; color:#555;">2º Selecione a Turma</label>
-                <select id="selImportTurma" class="input-modal" onchange="atualizarDropdownMaterias()" disabled style="margin-bottom:0;">
-                    <option value=''>Aguardando Curso...</option>
-                </select>
-            </div>
-            <div>
-                <label style="font-size:12px; font-weight:bold; color:#555;">3º Selecione a Matéria</label>
-                <select id="selImportMateria" class="input-modal" disabled style="margin-bottom:0;">
-                    <option value=''>Aguardando Turma...</option>
-                </select>
-            </div>
-        </div>
-
-        <textarea id="txtImport" style="height:100px; font-family:monospace;" placeholder="Cole aqui a lista de alunos e faltas do seu sistema..." oninput="atualizarPrevia()" class="input-modal"></textarea>
-        
-        <div style="display:flex; gap:10px;">
-            <div style="flex:1;"><label style="font-size:11px;">Coluna Nome (Nº)</label><input type="number" id="colNome" value="3" class="input-modal" oninput="atualizarPrevia()"></div>
-            <div style="flex:1;"><label style="font-size:11px;">Coluna Faltas (Nº)</label><input type="number" id="colFaltas" value="5" class="input-modal" oninput="atualizarPrevia()"></div>
-        </div>
-        
-        <div class="previa-box">
-            <div style="font-size:12px; font-weight:bold; color:#9c27b0; margin-bottom:5px;">👁️ Prévia (Ativos Detectados):</div>
-            <table style="width:100%; font-size:11px; border-collapse: collapse;">
-                <tbody id="tbodyPrevia"><tr><td style="text-align:center; color:#888;">Aguardando dados...</td></tr></tbody>
-            </table>
-        </div>
-        <button id="btnSalvarImportacao" onclick="executarImportacao()" style="background:#9c27b0; width:100%; padding:12px; margin-top:15px; color:white; border:none; border-radius:5px; cursor:pointer;">💾 Salvar no Banco de Dados</button>
-    </div>
-</div>
+<div id="modalImport" class="modal-overlay"><div class="modal-content"><span class="close-btn" onclick="fecharModal('modalImport')">&times;</span><h3 style="margin-bottom: 20px;">Lançar Frequência</h3><div style="background: #f8f9fa; padding: 15px; border-radius: 5px; border: 1px solid #ddd; margin-bottom: 15px;"><div style="margin-bottom: 10px;"><label style="font-size:12px; font-weight:bold; color:#555;">1º Selecione o Curso / Grade</label><select id="selImportCurso" class="input-modal" onchange="atualizarDropdownImportTurma()" style="margin-bottom:0;"></select></div><div style="margin-bottom: 10px;"><label style="font-size:12px; font-weight:bold; color:#555;">2º Selecione a Turma</label><select id="selImportTurma" class="input-modal" onchange="atualizarDropdownMaterias()" disabled style="margin-bottom:0;"><option value=''>Aguardando Curso...</option></select></div><div><label style="font-size:12px; font-weight:bold; color:#555;">3º Selecione a Matéria</label><select id="selImportMateria" class="input-modal" disabled style="margin-bottom:0;"><option value=''>Aguardando Turma...</option></select></div></div><textarea id="txtImport" style="height:100px; font-family:monospace;" placeholder="Cole aqui a lista de alunos e faltas do seu sistema..." oninput="atualizarPrevia()" class="input-modal"></textarea><div style="display:flex; gap:10px;"><div style="flex:1;"><label style="font-size:11px;">Coluna Nome (Nº)</label><input type="number" id="colNome" value="3" class="input-modal" oninput="atualizarPrevia()"></div><div style="flex:1;"><label style="font-size:11px;">Coluna Faltas (Nº)</label><input type="number" id="colFaltas" value="5" class="input-modal" oninput="atualizarPrevia()"></div></div><div class="previa-box"><div style="font-size:12px; font-weight:bold; color:#9c27b0; margin-bottom:5px;">👁️ Prévia (Ativos Detectados):</div><table style="width:100%; font-size:11px; border-collapse: collapse;"><tbody id="tbodyPrevia"><tr><td style="text-align:center; color:#888;">Aguardando dados...</td></tr></tbody></table></div><button id="btnSalvarImportacao" onclick="executarImportacao()" style="background:#9c27b0; width:100%; padding:12px; margin-top:15px; color:white; border:none; border-radius:5px; cursor:pointer;">💾 Salvar no Banco de Dados</button></div></div>
 
 <script>
-const SHEET_ID = "1MjfQ5NQ3BvQAWzmIxjoqDBmeQdAn9EREGjqnj2EAR1I"; 
+// O NOVO MOTOR! URL do seu Apps Script
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzjCh63MR6wbYoaff3qm3uAgPxbgF6_XtJqBImkvJZZVT8dbA5pLi7IV7sLfddaRf81KA/exec"; 
-const CONFIG_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=0&sheet=Config`;
-const HIST_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=0&sheet=Historico`;
-const MATRIZES_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=0&sheet=Matrizes`;
-const BANCO_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=0&sheet=BD_Frequencias`; 
 
 let historicoGlobal = [], historicoSistema = [], estruturaEscola = {}, dadosConsolidados = [], dadosFiltrados = [], listaMateriasSimples = [], alunoAcaoPendente = "", dadosProntosParaSalvar = [];
 let matrizesGlobais = []; 
@@ -262,51 +163,46 @@ async function carregarTudo() {
     document.getElementById("loading").style.display = "block";
     
     try {
+        // Chamadas ultra limpas usando a sua nova API JSON
         const [resHist, resConfig, resMatrizes] = await Promise.all([
-            fetch(`${HIST_URL}&t=${Date.now()}`).then(r => r.text()),
-            fetch(`${CONFIG_URL}&t=${Date.now()}`).then(r => r.text()),
-            fetch(`${MATRIZES_URL}&t=${Date.now()}`).then(r => r.text())
+            fetch(`${SCRIPT_URL}?aba=Historico`).then(r => r.json()),
+            fetch(`${SCRIPT_URL}?aba=Config`).then(r => r.json()),
+            fetch(`${SCRIPT_URL}?aba=Matrizes`).then(r => r.json())
         ]);
 
-        const jsonMatrizes = JSON.parse(resMatrizes.substring(47).slice(0, -2));
         matrizesGlobais = [];
         let cursosEncontrados = new Set();
         
-        if (jsonMatrizes.table.rows.length > 1) {
-            jsonMatrizes.table.rows.slice(1).forEach(r => { 
-                if(r.c[0]?.v) {
-                    cursosEncontrados.add(r.c[0].v.trim()); 
-                    matrizesGlobais.push({ curso: r.c[0].v.trim(), disciplina: r.c[1]?.v, codigo: r.c[2]?.v, ch: r.c[3]?.v });
-                }
-            });
-        }
+        resMatrizes.forEach(r => { 
+            if(r[0]) {
+                cursosEncontrados.add(String(r[0]).trim()); 
+                matrizesGlobais.push({ curso: String(r[0]).trim(), disciplina: r[1], codigo: r[2], ch: parseFloat(r[3]) || 0 });
+            }
+        });
         
         const selectCursoCriar = document.getElementById("selNovaTurmaCurso");
         selectCursoCriar.innerHTML = "<option value=''>Escolha o Curso/Grade...</option>";
         Array.from(cursosEncontrados).sort().forEach(c => selectCursoCriar.appendChild(new Option(c, c)));
 
-        const jsonHist = JSON.parse(resHist.substring(47).slice(0, -2));
-        let hGeral = jsonHist.table.rows.slice(1).map(r => ({ turma: r.c[0]?.v, aluno: r.c[1]?.v, data: r.c[3]?.f || r.c[3]?.v, acao: r.c[4]?.v })).filter(h => h.aluno);
+        let hGeral = resHist.map(r => ({ turma: r[0], aluno: r[1], faltas: r[2], data: r[3], acao: r[4] })).filter(h => h.aluno);
         historicoGlobal = hGeral.filter(h => h.aluno !== "[SISTEMA]");
         historicoSistema = hGeral.filter(h => h.aluno === "[SISTEMA]");
 
-        const jsonConfig = JSON.parse(resConfig.substring(47).slice(0, -2));
         estruturaEscola = {}; 
         listaMateriasSimples = [];
         mapaTurmaCursoGlobal = {};
 
-        jsonConfig.table.rows.slice(1).forEach(r => {
-            let t = r.c[0]?.v, d = r.c[1]?.v, a = r.c[2]?.v, c = r.c[3]?.v;
-            let cursoSalvo = r.c[4]?.v;
+        resConfig.forEach(r => {
+            let t = r[0], d = r[1], a = r[2], c = parseFloat(r[3]) || 0, cursoSalvo = r[4];
 
             if (t && a) {
                 if (!estruturaEscola[t]) estruturaEscola[t] = [];
-                estruturaEscola[t].push({ disciplina: d, aba: a, cargaTotal: c || 0 });
+                estruturaEscola[t].push({ disciplina: d, aba: a, cargaTotal: c });
                 listaMateriasSimples.push({ nome: `${t} - ${d}`, aba: a, turma: t, disciplina: d }); 
                 
                 if (!mapaTurmaCursoGlobal[t]) {
                     if (cursoSalvo) {
-                        mapaTurmaCursoGlobal[t] = cursoSalvo.trim();
+                        mapaTurmaCursoGlobal[t] = String(cursoSalvo).trim();
                     } else {
                         let match = matrizesGlobais.find(m => m.codigo && a.includes(m.codigo));
                         if (!match) match = matrizesGlobais.find(m => m.disciplina === d);
@@ -336,35 +232,30 @@ async function carregarTudo() {
         document.getElementById("loading").style.display = "none";
 
     } catch(e) {
-        document.getElementById("loading").innerText = "Erro ao carregar dados. Atualize a página.";
+        console.error("Erro na carga inicial:", e);
+        document.getElementById("loading").innerText = "Erro ao carregar dados. Verifique se publicou a 'Nova Versão' no Apps Script.";
     }
 }
 
+// O resto das funções do Select (Inalteradas, agora só operam com as variáveis já preenchidas)
 function atualizarDropdownImportTurma() {
     let curso = document.getElementById("selImportCurso").value;
     let sImportTurma = document.getElementById("selImportTurma");
     let sImportMateria = document.getElementById("selImportMateria");
-    
     sImportTurma.innerHTML = "<option value=''>2º Escolha a Turma...</option>";
     sImportMateria.innerHTML = "<option value=''>Aguardando Turma...</option>";
     sImportMateria.disabled = true;
-
     if(!curso) { sImportTurma.disabled = true; return; }
-    
     sImportTurma.disabled = false;
     let turmasDoCurso = Object.keys(mapaTurmaCursoGlobal).filter(t => mapaTurmaCursoGlobal[t] === curso);
-    turmasDoCurso.sort(ordenarCursosTurmas).forEach(t => {
-        sImportTurma.appendChild(new Option(t, t));
-    });
+    turmasDoCurso.sort(ordenarCursosTurmas).forEach(t => sImportTurma.appendChild(new Option(t, t)));
 }
 
 function atualizarDropdownMaterias() {
     let turma = document.getElementById("selImportTurma").value;
     let sImportMateria = document.getElementById("selImportMateria");
-    
     sImportMateria.innerHTML = "<option value=''>3º Selecione a Matéria...</option>";
     if(!turma) { sImportMateria.disabled = true; return; }
-
     sImportMateria.disabled = false;
     let materias = estruturaEscola[turma] || [];
     materias.forEach(m => sImportMateria.appendChild(new Option(m.disciplina, m.aba)));
@@ -375,13 +266,11 @@ function verificarEAD() {
     let curso = document.getElementById("selNovaTurmaCurso").value;
     let divAulas = document.getElementById("divAulasEAD");
     let listaHTML = document.getElementById("listaDisciplinasEAD");
-    
     if(mod && mod.includes("EAD") && curso !== "") {
         let materias = matrizesGlobais.filter(m => m.curso === curso);
         let html = "";
         materias.forEach(mat => {
-            html += `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+            html += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
                 <span style="font-size:11px; color:#555;">${mat.disciplina} (CH: ${mat.ch}h)</span>
                 <input type="number" class="input-aulas-ead" data-codigo="${mat.codigo}" placeholder="Aulas" style="width:70px; padding:5px; border:1px solid #ccc; border-radius:3px;">
             </div>`;
@@ -398,9 +287,7 @@ async function executarCriarTurma() {
     let num = document.getElementById("txtNovaTurmaNum").value.trim(); 
     let mod = document.getElementById("selNovaTurmaMod").value;
     let curso = document.getElementById("selNovaTurmaCurso").value;
-
     if(!num || !curso || !mod) return alert("Por favor, preencha o número, curso e escolha a modalidade!");
-
     let customAulas = {};
     if (mod.includes("EAD")) {
         let inputsEAD = document.querySelectorAll(".input-aulas-ead");
@@ -410,15 +297,10 @@ async function executarCriarTurma() {
             customAulas[inputsEAD[i].getAttribute("data-codigo")] = val;
         }
     }
-
     let btn = document.getElementById("btnSalvarTurma");
     btn.innerText = "⏳ Configurando..."; btn.disabled = true;
-
     try {
-        await fetch(SCRIPT_URL, {
-            method: "POST",
-            body: JSON.stringify({ tipo: "CRIAR_TURMA", numeroTurma: num, modalidade: mod, curso: curso, customAulas: customAulas })
-        });
+        await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ tipo: "CRIAR_TURMA", numeroTurma: num, modalidade: mod, curso: curso, customAulas: customAulas }) });
         alert("✅ Turma criada! Tudo pronto para receber dados.");
         fecharModal('modalNovaTurma');
         document.getElementById("txtNovaTurmaNum").value = "";
@@ -439,17 +321,14 @@ async function processarTurma(turma) {
     if (materias) materias.forEach(m => mapaMaterias[m.disciplina] = m);
     
     try {
-        // Revertido para o método original que lê a base de dados de forma 100% segura
-        const res = await fetch(`${BANCO_URL}&t=${Date.now()}`);
-        const txt = await res.text();
-        const json = JSON.parse(txt.substring(47).slice(0,-2));
+        // Agora busca APENAS a turma escolhida usando a nova API JSON que você acabou de criar no Apps Script
+        const res = await fetch(`${SCRIPT_URL}?aba=BD_Frequencias&turma=${encodeURIComponent(turma)}`);
+        const rawRows = await res.json();
         
-        let rawRows = [];
-        if(json.table.rows.length > 1) { rawRows = json.table.rows.slice(1); } 
-        let dadosDestaTurma = rawRows.filter(r => r.c[0]?.v === turma);
+        if(rawRows.erro) throw new Error(rawRows.erro);
 
-        dadosDestaTurma.forEach(linha => {
-            let discBD = linha.c[1]?.v, nome = linha.c[2]?.v, faltas = linha.c[3]?.v || 0;
+        rawRows.forEach(linha => {
+            let discBD = linha[1], nome = linha[2], faltas = parseFloat(linha[3]) || 0;
             if (nome) {
                 let matInfo = mapaMaterias[discBD]; 
                 if (!matInfo) return; 
@@ -458,14 +337,11 @@ async function processarTurma(turma) {
                 if (!mapaAlunos[nome]) mapaAlunos[nome] = { nome, status: "OK", prioridade: 0, detalhes: [] };
                 
                 let perc = 0;
-                if(carga > 0) {
-                    perc = (faltas / carga) * 100;
-                }
+                if(carga > 0) perc = (faltas / carga) * 100;
                 
                 let sMat = "OK";
                 if (perc > 65) sMat = "Desistente"; else if (perc > 50) sMat = "Risco Alto"; else if (perc > 25) sMat = "Atenção"; else if (perc >= 15) sMat = "Alerta";
                 
-                // Atualiza a matéria se já existir, senão acrescenta (preserva o histórico para a caixa de seleção)
                 let existingIndex = mapaAlunos[nome].detalhes.findIndex(d => d.disciplina === discBD);
                 if (existingIndex > -1) {
                     mapaAlunos[nome].detalhes[existingIndex] = { disciplina: discBD, perc: perc.toFixed(0) + "%", faltas, status: sMat };
@@ -480,7 +356,11 @@ async function processarTurma(turma) {
         });
         dadosConsolidados = Object.values(mapaAlunos).sort((a,b) => b.prioridade - a.prioridade);
         redefinirFiltro();
-    } catch(e) { dadosConsolidados = []; redefinirFiltro(); }
+    } catch(e) { 
+        console.error(e); 
+        dadosConsolidados = []; 
+        redefinirFiltro(); 
+    }
     document.getElementById("loading").style.display = "none";
 }
 
@@ -490,7 +370,6 @@ function mostrar() {
     const tbody = document.getElementById("tabela-corpo");
     tbody.innerHTML = "";
     
-    // Verifica a nova caixa de seleção
     let chk = document.getElementById("chkMostrarTodasUCs");
     let mostrarTodas = chk ? chk.checked : false;
 
@@ -508,7 +387,6 @@ function mostrar() {
         let tagsHtml = "—";
         
         if (aluno.detalhes.length > 0) {
-            // Lógica da caixa: Mostra tudo ou só a última (atual)
             let listaParaMostrar = mostrarTodas ? aluno.detalhes : [aluno.detalhes[aluno.detalhes.length - 1]];
             
             tagsHtml = listaParaMostrar.map(d => {
@@ -530,22 +408,18 @@ function mostrar() {
     });
 }
 
-// Relatório Global de Evasão
 async function gerarRelatorioGlobal() {
     let btn = document.getElementById("btnRelatorio");
     btn.innerText = "⏳ Calculando..."; btn.disabled = true;
     try {
-        const res = await fetch(`${BANCO_URL}&t=${Date.now()}`);
-        const txt = await res.text();
-        const json = JSON.parse(txt.substring(47).slice(0,-2));
-        let rawRows = [];
-        if(json.table.rows.length > 1) { rawRows = json.table.rows.slice(1); }
+        const res = await fetch(`${SCRIPT_URL}?aba=BD_Frequencias`);
+        const rawRows = await res.json();
         
         let stats = { total: 0, ok: 0, alerta: 0, atencao: 0, risco: 0, critico: 0 };
         let mapaGlobal = {}; 
         
         rawRows.forEach(linha => {
-            let turmaBD = linha.c[0]?.v, discBD = linha.c[1]?.v, nome = linha.c[2]?.v, faltas = linha.c[3]?.v || 0;
+            let turmaBD = linha[0], discBD = linha[1], nome = linha[2], faltas = parseFloat(linha[3]) || 0;
             if(turmaBD && nome && nome !== "[SISTEMA]") {
                 let matInfo = estruturaEscola[turmaBD]?.find(m => m.disciplina === discBD);
                 if(matInfo) {
@@ -568,29 +442,16 @@ async function gerarRelatorioGlobal() {
             else stats.critico++;
         });
         
-        document.getElementById("conteudoRelatorioGlobal").innerHTML = `
-            <div style="font-size: 16px; line-height: 1.8;">
-                <b style="font-size: 20px; color: #333;">Total Geral de Alunos Ativos: ${stats.total}</b><br><hr style="border:0; border-top:1px solid #ccc; margin:10px 0;">
-                <span style="color: #2e7d32; font-weight: bold;">🟢 Situação Regular:</span> ${stats.ok} alunos<br>
-                <span style="color: #fbc02d; font-weight: bold;">🟡 Alerta (15-25%):</span> ${stats.alerta} alunos<br>
-                <span style="color: #f9a825; font-weight: bold;">🟠 Atenção (26-50%):</span> ${stats.atencao} alunos<br>
-                <span style="color: #e67e22; font-weight: bold;">🔴 Risco Alto (51-65%):</span> ${stats.risco} alunos<br>
-                <span style="color: #c62828; font-weight: bold;">⚫ Desistente (>65%):</span> ${stats.critico} alunos
-            </div>
-        `;
+        document.getElementById("conteudoRelatorioGlobal").innerHTML = `<div style="font-size: 16px; line-height: 1.8;"><b style="font-size: 20px; color: #333;">Total Geral de Alunos Ativos: ${stats.total}</b><br><hr style="border:0; border-top:1px solid #ccc; margin:10px 0;"><span style="color: #2e7d32; font-weight: bold;">🟢 Situação Regular:</span> ${stats.ok} alunos<br><span style="color: #fbc02d; font-weight: bold;">🟡 Alerta (15-25%):</span> ${stats.alerta} alunos<br><span style="color: #f9a825; font-weight: bold;">🟠 Atenção (26-50%):</span> ${stats.atencao} alunos<br><span style="color: #e67e22; font-weight: bold;">🔴 Risco Alto (51-65%):</span> ${stats.risco} alunos<br><span style="color: #c62828; font-weight: bold;">⚫ Desistente (>65%):</span> ${stats.critico} alunos</div>`;
         document.getElementById("modalRelatorioGlobal").style.display = "flex";
-    } catch(e) { 
-        alert("Erro ao gerar relatório global."); 
-    } finally { 
-        btn.innerText = "📊 Relatório Global"; btn.disabled = false; 
-    }
+    } catch(e) { alert("Erro ao gerar relatório global."); } finally { btn.innerText = "📊 Relatório Global"; btn.disabled = false; }
 }
 
 function verificarDataImportacao(t) {
     let div = document.getElementById("dataAtualizacao"); div.style.display = "inline-block";
     let imp = historicoSistema.filter(h => h.turma === t);
     if (imp.length === 0) { div.innerHTML = "⚠️ Sem registro"; return; }
-    let dStr = imp[imp.length-1].data, p = dStr.split('/'), dI = new Date(p[2], p[1]-1, p[0]), diff = (new Date()-dI)/86400000;
+    let dStr = imp[imp.length-1].data, p = String(dStr).split('/'), dI = new Date(p[2], p[1]-1, p[0]), diff = (new Date()-dI)/86400000;
     div.innerHTML = (diff > 7 ? "⚠️ Dados velhos" : "✅ Dados OK") + ` (${dStr})`;
     div.style.color = diff > 7 ? "#c62828" : "#2e7d32";
 }
@@ -600,95 +461,44 @@ function abrirModalAcao(n) { alunoAcaoPendente = n; document.getElementById("aca
 async function salvarAcaoPadronizada() { let t = document.getElementById("selTipoAcao").value, d = document.getElementById("txtDetalheAcao").value; if (!d.trim()) return alert("Preencha detalhes"); document.getElementById("modalAcao").style.display = "none"; try { await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ turma: document.getElementById("selTurma").value, aluno: alunoAcaoPendente, faltas: "-", data: new Date().toLocaleDateString('pt-BR'), acao: `[${t}] ${d}` }) }); alert("Salvo!"); carregarTudo(); } catch (e) { alert("Erro"); } }
 
 function abrirImportacao() { document.getElementById("modalImport").style.display = "flex"; }
-
 function atualizarPrevia() {
-    let txt = document.getElementById("txtImport").value.trim();
-    let b = document.getElementById("tbodyPrevia");
+    let txt = document.getElementById("txtImport").value.trim(), b = document.getElementById("tbodyPrevia");
     dadosProntosParaSalvar = []; b.innerHTML = "";
-    
     if (!txt) { b.innerHTML = "<tr><td colspan='2' style='text-align:center; color:#888;'>Aguardando dados...</td></tr>"; return; }
-
-    let n = parseInt(document.getElementById("colNome").value) - 1 || 0;
-    let f = parseInt(document.getElementById("colFaltas").value) - 1 || 1;
-
+    let n = parseInt(document.getElementById("colNome").value) - 1 || 0, f = parseInt(document.getElementById("colFaltas").value) - 1 || 1;
     txt.split(/\r?\n/).forEach(l => {
         if(!l.trim()) return;
-        let c = l.split("\t");
-        if(c.length === 1 && l.includes(";")) c = l.split(";");
-        if(c.length === 1 && l.includes(",")) c = l.split(",");
-
-        let nm = c[n]; let flRaw = c[f];
-        if (nm === undefined || flRaw === undefined) {
-            if (c.length >= 2) { nm = c[0]; flRaw = c[c.length - 1]; }
-        }
-
+        let c = l.split("\t"); if(c.length === 1 && l.includes(";")) c = l.split(";"); if(c.length === 1 && l.includes(",")) c = l.split(",");
+        let nm = c[n], flRaw = c[f];
+        if (nm === undefined || flRaw === undefined) { if (c.length >= 2) { nm = c[0]; flRaw = c[c.length - 1]; } }
         if (nm) nm = nm.trim(); if (flRaw) flRaw = flRaw.trim();
-
         if (nm && nm.length > 2 && flRaw !== "" && flRaw !== undefined) {
             if (nm.toLowerCase() === "aluno" || nm.toLowerCase() === "nome") return;
             let faltas = flRaw.replace(/\D/g, ""); if (faltas === "") faltas = "0";
             dadosProntosParaSalvar.push([nm, faltas]);
-            
-            if (dadosProntosParaSalvar.length <= 5) {
-                b.innerHTML += `<tr><td style="border:1px solid #ddd; padding:4px;">${escapeHTML(nm)}</td><td style="border:1px solid #ddd; padding:4px; text-align:center;">${escapeHTML(faltas)}</td></tr>`;
-            }
+            if (dadosProntosParaSalvar.length <= 5) b.innerHTML += `<tr><td style="border:1px solid #ddd; padding:4px;">${escapeHTML(nm)}</td><td style="border:1px solid #ddd; padding:4px; text-align:center;">${escapeHTML(faltas)}</td></tr>`;
         }
     });
-
-    if (dadosProntosParaSalvar.length === 0) {
-        b.innerHTML = `<tr><td colspan='2' style='text-align:center; color:red; padding:10px;'><b>Nenhum dado válido detectado.</b><br><small>Verifique os números das colunas (Nome e Faltas).</small></td></tr>`;
-    } else {
-        b.innerHTML += `<tr><td colspan='2' style='text-align:center; background:#e8f5e9; color:#2e7d32; font-weight:bold; padding:5px;'>✅ ${dadosProntosParaSalvar.length} alunos capturados!</td></tr>`;
-    }
+    if (dadosProntosParaSalvar.length === 0) b.innerHTML = `<tr><td colspan='2' style='text-align:center; color:red; padding:10px;'><b>Nenhum dado válido detectado.</b></td></tr>`;
+    else b.innerHTML += `<tr><td colspan='2' style='text-align:center; background:#e8f5e9; color:#2e7d32; font-weight:bold; padding:5px;'>✅ ${dadosProntosParaSalvar.length} alunos capturados!</td></tr>`;
 }
 
 async function executarImportacao() { 
-    let abaVirtualId = document.getElementById("selImportMateria").value; 
-    atualizarPrevia(); 
-
+    let abaVirtualId = document.getElementById("selImportMateria").value; atualizarPrevia(); 
     if(!abaVirtualId || !dadosProntosParaSalvar.length) { return alert("Selecione a matéria e cole dados válidos."); }
-    
     let inf = listaMateriasSimples.find(m => m.aba === abaVirtualId); 
-    let btn = document.getElementById("btnSalvarImportacao");
-    let txtOriginal = btn.innerText;
-    btn.innerText = "⏳ A guardar dados..."; btn.disabled = true;
-
+    let btn = document.getElementById("btnSalvarImportacao"); let txtOriginal = btn.innerText; btn.innerText = "⏳ A guardar dados..."; btn.disabled = true;
     try { 
-        await Promise.all([ 
-            fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ tipo: "IMPORTAR", turma: inf.turma, disciplina: inf.disciplina, lista: dadosProntosParaSalvar }) }), 
-            fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ turma: inf.turma, aluno: "[SISTEMA]", faltas: "-", data: new Date().toLocaleDateString('pt-BR'), acao: "Importação: " + inf.nome }) }) 
-        ]); 
+        await Promise.all([ fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ tipo: "IMPORTAR", turma: inf.turma, disciplina: inf.disciplina, lista: dadosProntosParaSalvar }) }), fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ turma: inf.turma, aluno: "[SISTEMA]", faltas: "-", data: new Date().toLocaleDateString('pt-BR'), acao: "Importação: " + inf.nome }) }) ]); 
         alert(`Sucesso! ${dadosProntosParaSalvar.length} alunos guardados no Banco de Dados.`); 
-        
-        document.getElementById("txtImport").value = "";
-        document.getElementById("selImportCurso").value = "";
-        document.getElementById("selImportTurma").innerHTML = "<option value=''>Aguardando Curso...</option>";
-        document.getElementById("selImportTurma").disabled = true;
-        document.getElementById("selImportMateria").innerHTML = "<option value=''>Aguardando Turma...</option>";
-        document.getElementById("selImportMateria").disabled = true;
-        document.getElementById("tbodyPrevia").innerHTML = "<tr><td colspan='2' style='text-align:center; color:#888;'>Aguardando dados...</td></tr>";
-        dadosProntosParaSalvar = [];
-        
-        fecharModal('modalImport'); 
-        carregarTudo(); 
-    } catch(e) { 
-        alert("Erro ao guardar."); 
-    } finally {
-        btn.innerText = txtOriginal; btn.disabled = false;
-    }
+        document.getElementById("txtImport").value = ""; document.getElementById("selImportCurso").value = ""; document.getElementById("selImportTurma").innerHTML = "<option value=''>Aguardando Curso...</option>"; document.getElementById("selImportTurma").disabled = true; document.getElementById("selImportMateria").innerHTML = "<option value=''>Aguardando Turma...</option>"; document.getElementById("selImportMateria").disabled = true; document.getElementById("tbodyPrevia").innerHTML = "<tr><td colspan='2' style='text-align:center; color:#888;'>Aguardando dados...</td></tr>"; dadosProntosParaSalvar = [];
+        fecharModal('modalImport'); carregarTudo(); 
+    } catch(e) { alert("Erro ao guardar."); } finally { btn.innerText = txtOriginal; btn.disabled = false; }
 }
 
 function fecharModal(id) { document.getElementById(id).style.display = "none"; }
-
 let debounceTimer;
-document.getElementById("busca").addEventListener("input", function() { 
-    clearTimeout(debounceTimer);
-    let t = this.value.toLowerCase(); 
-    debounceTimer = setTimeout(() => {
-        dadosFiltrados = dadosConsolidados.filter(a => a.nome.toLowerCase().includes(t)); 
-        mostrar(); 
-    }, 300);
-});
+document.getElementById("busca").addEventListener("input", function() { clearTimeout(debounceTimer); let t = this.value.toLowerCase(); debounceTimer = setTimeout(() => { dadosFiltrados = dadosConsolidados.filter(a => a.nome.toLowerCase().includes(t)); mostrar(); }, 300); });
 </script>
 </body>
 </html>
