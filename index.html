@@ -29,6 +29,7 @@
         td { padding: 10px; border-bottom: 1px solid #eee; vertical-align: middle; font-size: 14px; }
         .badge { padding: 4px 8px; border-radius: 12px; color: white; font-weight: bold; font-size: 10px; text-transform: uppercase; }
         
+        /* Regra rigorosa: letra sempre preta e em negrito */
         .tag-materia { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; margin: 2px; color: #000 !important; font-weight: bold; border: 1px solid rgba(0,0,0,0.2); }
         .bg-ok { background-color: #a5d6a7; }
         .bg-alerta { background-color: #fff59d; }
@@ -113,7 +114,8 @@
                     <th>Situação Geral</th>
                     <th>
                         Disciplina Atual (Faltas | %)
-                        <label style="display: flex; align-items: center; gap: 5px; font-size: 11px; margin-top: 5px; cursor: pointer; color: #2196f3; font-weight: bold;">
+                        <br>
+                        <label style="display: inline-flex; align-items: center; gap: 5px; font-size: 11px; margin-top: 6px; cursor: pointer; color: #444; font-weight: bold; background: #e0e0e0; padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc;">
                             <input type="checkbox" id="chkMostrarTodasUCs" onchange="mostrar()"> Mostrar todas as UC's
                         </label>
                     </th>
@@ -437,23 +439,22 @@ async function processarTurma(turma) {
     if (materias) materias.forEach(m => mapaMaterias[m.disciplina] = m);
     
     try {
-        const querySegura = encodeURIComponent(`select * where A = '${turma}'`);
-        const res = await fetch(`${BANCO_URL}&tq=${querySegura}&t=${Date.now()}`);
-        
+        // Revertido para o método original que lê a base de dados de forma 100% segura
+        const res = await fetch(`${BANCO_URL}&t=${Date.now()}`);
         const txt = await res.text();
         const json = JSON.parse(txt.substring(47).slice(0,-2));
         
         let rawRows = [];
-        if(json.table.rows.length > 0) { rawRows = json.table.rows; } 
+        if(json.table.rows.length > 1) { rawRows = json.table.rows.slice(1); } 
+        let dadosDestaTurma = rawRows.filter(r => r.c[0]?.v === turma);
 
-        rawRows.forEach(linha => {
+        dadosDestaTurma.forEach(linha => {
             let discBD = linha.c[1]?.v, nome = linha.c[2]?.v, faltas = linha.c[3]?.v || 0;
             if (nome) {
                 let matInfo = mapaMaterias[discBD]; 
                 if (!matInfo) return; 
                 let carga = matInfo.cargaTotal;
                 
-                // Se o aluno não existir, cria o perfil dele com a lista vazia de UC's
                 if (!mapaAlunos[nome]) mapaAlunos[nome] = { nome, status: "OK", prioridade: 0, detalhes: [] };
                 
                 let perc = 0;
@@ -464,7 +465,7 @@ async function processarTurma(turma) {
                 let sMat = "OK";
                 if (perc > 65) sMat = "Desistente"; else if (perc > 50) sMat = "Risco Alto"; else if (perc > 25) sMat = "Atenção"; else if (perc >= 15) sMat = "Alerta";
                 
-                // Em vez de apagar as antigas, ele guarda no histórico do aluno
+                // Atualiza a matéria se já existir, senão acrescenta (preserva o histórico para a caixa de seleção)
                 let existingIndex = mapaAlunos[nome].detalhes.findIndex(d => d.disciplina === discBD);
                 if (existingIndex > -1) {
                     mapaAlunos[nome].detalhes[existingIndex] = { disciplina: discBD, perc: perc.toFixed(0) + "%", faltas, status: sMat };
@@ -472,7 +473,6 @@ async function processarTurma(turma) {
                     mapaAlunos[nome].detalhes.push({ disciplina: discBD, perc: perc.toFixed(0) + "%", faltas, status: sMat });
                 }
                 
-                // A situação geral do aluno é sempre ditada pela última UC que foi lida na planilha
                 mapaAlunos[nome].status = sMat;
                 let pesos = {"OK": 0, "Alerta": 1, "Atenção": 2, "Risco Alto": 3, "Desistente": 4};
                 mapaAlunos[nome].prioridade = pesos[sMat];
@@ -490,8 +490,9 @@ function mostrar() {
     const tbody = document.getElementById("tabela-corpo");
     tbody.innerHTML = "";
     
-    // VERIFICA SE A CAIXINHA ESTÁ MARCADA PARA MOSTRAR TUDO OU SÓ A ATUAL
-    let mostrarTodas = document.getElementById("chkMostrarTodasUCs").checked;
+    // Verifica a nova caixa de seleção
+    let chk = document.getElementById("chkMostrarTodasUCs");
+    let mostrarTodas = chk ? chk.checked : false;
 
     let cont = { "OK": 0, "Alerta": 0, "Atenção": 0, "Risco Alto": 0, "Desistente": 0 };
     dadosConsolidados.forEach(a => cont[a.status]++);
@@ -506,12 +507,10 @@ function mostrar() {
     dadosFiltrados.forEach((aluno, index) => {
         let tagsHtml = "—";
         
-        // Se o aluno tiver UCs lançadas
         if (aluno.detalhes.length > 0) {
-            // Se "Mostrar Todas" estiver marcado, puxa todas. Se não, pega apenas a última da lista (a atual)
+            // Lógica da caixa: Mostra tudo ou só a última (atual)
             let listaParaMostrar = mostrarTodas ? aluno.detalhes : [aluno.detalhes[aluno.detalhes.length - 1]];
             
-            // Monta as tags coloridas de acordo com as regras de CSS que fizemos
             tagsHtml = listaParaMostrar.map(d => {
                 let corBg = "bg-ok";
                 if (d.status === "Alerta") corBg = "bg-alerta"; 
